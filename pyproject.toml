@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "logq"
+version = "0.0.0"
+authors = [
+  { name="Chor", email="chorong8883@gmail.com" },
+]
+description = "Log Queue"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS"
+]
+keywords = ["logger", "logger q", "logger queue", "log", "log q", "log queue", "queue", "logging", "logging q", "logging queue"]
+
+[project.urls]
+"Homepage" = "https://github.com/chorong8883/logq"
