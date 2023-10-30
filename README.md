@@ -21,15 +21,22 @@ thread.start()
 ```python  
 logqueue.info("start")
 logqueue.info("finish")
-```
-
+```  
 ```python 
 log_dict = logqueue.get()
 print(log_dict)
 ```
 output:  
-{'timestamp': 1700000000.100001, 'process_id': 1234, 'thread_id': 1234567890, 'log_type': 'information', 'file_name': 'test.py', 'file_lineno': 2, 'text': 'start'}  
-{'timestamp': 1700000000.100002, 'process_id': 1234, 'thread_id': 1234567890, 'log_type': 'information', 'file_name': 'test.py', 'file_lineno': 2, 'text': 'start'}  
+{'timestamp': 1700000000.100001, 'process_id': 1234, 'thread_id': 1234567890, 'log_type': 'information', 'file_name': 'test.py', 'file_lineno': 1, 'text': 'start'}  
+{'timestamp': 1700000000.100002, 'process_id': 1234, 'thread_id': 1234567890, 'log_type': 'information', 'file_name': 'test.py', 'file_lineno': 2, 'text': 'finish'}  
+
+```python  
+log_str = logqueue.parse(log_dict)
+print(log_str)
+```
+output:  
+2023-11-15 07:13:20.100001 234:PID 4567890:TID info test.py:1 start  
+2023-11-15 07:13:20.100002 234:PID 4567890:TID info test.py:2 finish  
 
 ## flush logqueue.get()
 ```python  
