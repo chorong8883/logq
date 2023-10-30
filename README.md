@@ -1,12 +1,12 @@
-# logq
+# logqueue
 Log Queue
 
-## implement logq.get()
+## implement logqueue.get()
 ```python  
-import logq
+import logqueue
 def log_worker():
     while True:
-        log_dict = logq.get()
+        log_dict = logqueue.get()
         if not log_dict:
             break
         print(log_dict)
@@ -19,29 +19,29 @@ thread.start()
 
 ## logging
 ```python  
-logq.info("start")
-logq.info("finish")
+logqueue.info("start")
+logqueue.info("finish")
 ```
 
 ```python 
-log_dict = logq.get()
+log_dict = logqueue.get()
 print(log_dict)
 ```
 output:  
 {'timestamp': 1700000000.100001, 'process_id': 1234, 'thread_id': 1234567890, 'log_type': 'information', 'file_name': 'test.py', 'file_lineno': 2, 'text': 'start'}  
 {'timestamp': 1700000000.100002, 'process_id': 1234, 'thread_id': 1234567890, 'log_type': 'information', 'file_name': 'test.py', 'file_lineno': 2, 'text': 'start'}  
 
-## flush logq.get()
+## flush logqueue.get()
 ```python  
 def log_worker():
     while True:
-        log_dict = logq.get()
+        log_dict = logqueue.get()
         if not log_dict:
             break
         print(log_dict)
 
-    while not logq.empty():
-        log_dict = logq.get()
+    while not logqueue.empty():
+        log_dict = logqueue.get()
         print(log_dict)
         
     print("flush queue")
