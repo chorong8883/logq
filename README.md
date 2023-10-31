@@ -133,7 +133,7 @@ output:
 2023-11-15 07:13:20.100001 info test.py start  
 
 #### LogKeys
-keys for log dict 
+keys for parse log  
 ```python
 LogKey.date
 LogKey.time
