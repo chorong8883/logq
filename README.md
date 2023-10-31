@@ -72,7 +72,7 @@ logqueue.info("start")
 ```python 
 log_dict = logqueue.get()
 print(log_dict)
-# Use log data to parse, input file, insert database.  
+# implement log data to parse, input file, insert database.  
 ```
 
 output:  
