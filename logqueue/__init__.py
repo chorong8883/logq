@@ -5,14 +5,16 @@ import inspect
 import multiprocessing
 import ctypes
 import traceback
+import queue
+import atexit
 
-
-__log_queue = multiprocessing.Queue()
+__log_queue = queue.Queue()
 
 class LogType:
     infomation = "information"
     debug = "debug"
     exception = "exception"
+    signal = "signal"
 
 class LogKey:
     date = "date"
@@ -60,9 +62,11 @@ __file_lineno_max_length = multiprocessing.Value(ctypes.c_int, 4)
 __file_lineno_format = multiprocessing.Value(ctypes.c_wchar_p, f"{{{LogKey.file_lineno}:<{{{OptionKey.file_lineno_length}}}}}")
 
 __file_info_format = multiprocessing.Value(ctypes.c_wchar_p, f"{{{LogKey.file_name}}}:{{{LogKey.file_lineno}}}")
-    
+
 def close():
     __log_queue.put_nowait(None)
+    
+atexit.register(close)
 
 def get():
     is_next = True
@@ -303,7 +307,9 @@ def debug(*objs:object, **kwargs):
 def exception(*objs:object, **kwargs):
     log_dict = __get_log_dict(LogType.exception, *objs, **kwargs)
     __log_queue.put_nowait(log_dict)
-
+def signal(*objs:object, **kwargs):
+    log_dict = __get_log_dict(LogType.signal, *objs, **kwargs)
+    __log_queue.put_nowait(log_dict)
 
 def parse(log_dict:dict) -> str:
     log_format = __log_format.value
@@ -329,7 +335,9 @@ def parse(log_dict:dict) -> str:
             __thread_id_length.value = len(str(thread_id))
             log_dict[LogKey.thread_id] = parse_thread_id(thread_id, __thread_id_length.value)
         
+    log_type = ""
     if LogKey.log_type in log_dict:
+        log_type = log_dict[LogKey.log_type]
         log_dict[LogKey.log_type] = parse_log_type(log_dict[LogKey.log_type], __log_type_length.value)
         
     if LogKey.file_name in log_dict and LogKey.file_lineno in log_dict:
@@ -350,7 +358,8 @@ def parse(log_dict:dict) -> str:
     if LogKey.traceback in log_dict:
         log_dict[LogKey.text] += '\n' + log_dict[LogKey.traceback]
     
-    return log_format.format(**log_dict)
-
-def test():
-    info("aa", "a")
+    log_str = log_format.format(**log_dict)
+    
+    if log_type == LogType.signal:
+        log_str = f"\n{log_str}"
+    return log_str
