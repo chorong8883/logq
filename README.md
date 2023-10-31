@@ -11,13 +11,30 @@ def log_worker():
             break
         print(log_dict)
     
-thread = threading.Thread(target=log_worker)
-thread.start()
+log_thread = threading.Thread(target=log_worker)
+log_thread.start()
 # ...
-# thread.join()
+# log_thread.join()
 ```
 
-## logging
+## Close
+```python  
+import logqueue
+
+def signal_handler(_, _):
+    logqueue.close()
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGABRT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
+# ... implement logqueue.get()
+log_thread.start()
+# ...
+log_thread.join()
+```
+
+## Logging
 ```python  
 logqueue.info("start")
 logqueue.info("finish")
@@ -38,7 +55,7 @@ output:
 2023-11-15 07:13:20.100001 234:PID 4567890:TID info test.py:1 start  
 2023-11-15 07:13:20.100002 234:PID 4567890:TID info test.py:2 finish  
 
-## flush logqueue.get()
+## Flush queue
 ```python  
 def log_worker():
     while True:
