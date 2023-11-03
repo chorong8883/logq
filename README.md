@@ -54,13 +54,6 @@ logqueue.put_info("start")
 logqueue.info("start")
 ```  
 
-```python  
-log_str = logqueue.parse(log_dict)
-print(log_str)
-```
-output:  
-2023-11-15 07:13:20.100001 12%:CPU 12%:Mem 234:PID 4567890:TID info test.py:1 start  
-
 #### **kwargs
 ```python  
 logqueue.info("hi", alarm_meesage="alarm", input_database=True)
@@ -76,7 +69,7 @@ output:
 'log_type': 'information',  
 'file_name': 'test.py',  
 'file_lineno': 1,  
-'text': 'start',  
+'text': 'hi',  
 'alarm_meesage': "alarm",  
 'input_database': True}  
 
@@ -90,6 +83,13 @@ logqueue.signal(*objs:object, **kwargs) # or put_signal()
 ```
 
 ## Parse
+```python  
+log_str = logqueue.parse(log_dict)
+print(log_str)
+```
+output:  
+2023-11-15 07:13:20.100001 12%:CPU 12%:Mem 234:PID 4567890:TID info test.py:1 start  
+
 ```python
 get_log_formatters() # default log formatters
 # {date} {time} {process_id:0{process_id_max_length}d}:PID {thread_id:0{thread_id_max_length}d}:TID {file_name:>{file_name_length}}:{file_lineno:<{file_lineno_length}} {log_type:{log_type_max_length}} {text}
