@@ -1,35 +1,37 @@
 # logqueue
 Log Queue
 
-## threading logqueue.get()
+## Initialize
 Declare thread function.  
 ```python  
+def logger_function(log_dict):
+    print(log_dict)
+    # ...
+```
+output:  
+{'log_type': 'exception',  
+'timestamp': 1700000000.100001,  
+'process_id': 1234,  
+'thread_id': 1234567890,  
+'cpu_usage': 12, # if exist psutil  
+'memory_usage': 12, # if exist psutil  
+'file_name': 'test.py',  
+'file_lineno': 1,  
+'text': 'start',  
+'trace_back': 'error'} # if exception  
+ 
+```python  
 import logqueue
-def log_thread_function():
-    while True:
-        log_dict = logqueue.get()
-        if not log_dict:
-            break
-        print(log_dict)
-```
-threading  
-```python  
-import threading
-log_thread = threading.Thread(target=log_thread_function)
-log_thread.start()
-# ...
-log_thread.join()
-```
-or
-```python  
-import threading
-threading.Thread(target=log_thread_function, daemon=True).start()
+logqueue.initialize(logger_function)
 # ...
 ```
 
-## Close
-Implement 'close()' when 'daemon=False' in thread.  
-No need 'close()' when 'daemon=True' in thread.  
+## Close and Join
+```python  
+logqueue.close()
+logqueue.join()
+```
+Signal
 ```python  
 import signal
 import logqueue
@@ -41,55 +43,23 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGABRT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
-# ... implement logqueue.get()
-log_thread.start()
-# ...
-log_thread.join()
-```
-
-### Flush queue
-in log thread function.  
-```python  
-def log_thread_function():
-    while True:
-        log_dict = logqueue.get()
-        if not log_dict:
-            print("Got None : Close")
-            break
-        print(log_dict)
-
-    print("Flush queue")
-    while not logqueue.empty():
-        log_dict = logqueue.get()
-        print(log_dict)
-        
+# ... 
+logqueue.join()
 ```
 
 ## Logging
 ```python  
+logqueue.put_info("start")
+# or
 logqueue.info("start")
 ```  
-```python 
-log_dict = logqueue.get()
-print(log_dict)
-# implement log data to parse, input file, insert database.  
-```
-
-output:  
-{'timestamp': 1700000000.100001,  
-'process_id': 1234,  
-'thread_id': 1234567890,  
-'log_type': 'information',  
-'file_name': 'test.py',  
-'file_lineno': 1,  
-'text': 'start'}  
 
 ```python  
-log_str = logqueue.parse(log_dict) # same dict above
+log_str = logqueue.parse(log_dict)
 print(log_str)
 ```
 output:  
-2023-11-15 07:13:20.100001 234:PID 4567890:TID info test.py:1 start  
+2023-11-15 07:13:20.100001 12%:CPU 12%:Mem 234:PID 4567890:TID info test.py:1 start  
 
 #### **kwargs
 ```python  
@@ -112,60 +82,53 @@ output:
 
 #### Log function types
 ```python  
-logqueue.etc(log_type:str, *objs:object, **kwargs)
-logqueue.info(*objs:object, **kwargs)
-logqueue.debug(*objs:object, **kwargs)
-logqueue.exception(*objs:object, **kwargs)
-logqueue.signal(*objs:object, **kwargs)
+logqueue.put(log_type:str, *objs:object, **kwargs)
+logqueue.info(*objs:object, **kwargs) # or put_info()
+logqueue.debug(*objs:object, **kwargs) # or put_debug()
+logqueue.exception(*objs:object, **kwargs) # or put_exception()
+logqueue.signal(*objs:object, **kwargs) # or put_signal()
 ```
 
 ## Parse
-Change log string format. (this is default format)  
-```python  
-change_log_format(LogKey.date, LogKey.time, LogKey.process_id, LogKey.thread_id, LogKey.log_type, LogKey.file_info, LogKey.text)
-```
-== "{date} {time} {process_id} {thread_id} {log_type} {file_info} {text}"  
-
-#### Change log string format
-```python  
-change_log_format(LogKey.date, LogKey.time, LogKey.log_type, LogKey.file_name, LogKey.text)
-```
-== "{date} {time} {log_type} {file_name} {text}"  
-output:  
-2023-11-15 07:13:20.100001 info test.py start  
-
-#### LogKeys
-keys for parse log  
 ```python
-LogKey.date
-LogKey.time
-LogKey.process_id
-LogKey.thread_id
-LogKey.log_type
-LogKey.file_info
-LogKey.file_name
-LogKey.file_lineno
-LogKey.text
-LogKey.traceback
+get_log_formatters() # default log formatters
+# {date} {time} {process_id:0{process_id_max_length}d}:PID {thread_id:0{thread_id_max_length}d}:TID {file_name:>{file_name_length}}:{file_lineno:<{file_lineno_length}} {log_type:{log_type_max_length}} {text}
+clear_log_formatter()
+
+append_log_formatter(f"{{{LogKey.date}}}")
+append_log_formatter(f"{{{LogKey.time}}}")
+get_log_formatters()
+# {date} {time}
 ```
-option or data keys
 ```python
-OptionKey.timestamp
-OptionKey.process_id_length
-OptionKey.thread_id_length
-OptionKey.log_type_length
-OptionKey.file_name_length
-OptionKey.file_lineno_length
+set_date_formatter("%y-%m-%d")
+get_date_formatter()
+# %y-%m-%d
 ```
-Each string format can change use keys.  
-```python  
-change_date_format(format_str:str) # '%Y-%m-%d'
-change_time_format(format_str:str) # '%H:%M:%S.%f'
-
-change_process_id_format(format_str:str) 
-# f"{{{LogKey.process_id}:0{{{OptionKey.process_id_length}}}d}}:PID"
-change_thread_id_format(format_str:str)
-# f"{{{LogKey.thread_id}:0{{{OptionKey.thread_id_length}}}d}}:TID"
-# ...
+```python
+set_process_id_formatter(f"{{{LogKey.process_id}:0{{{LogKey.process_id_max_length}}}d}}:PID")
+get_process_id_formatter()
+# {process_id:0{process_id_max_length}d}:PID
 ```
 
+### LogKeys
+```python
+LogKey.date  
+LogKey.time  
+LogKey.timestamp  
+LogKey.process_id  
+LogKey.process_id_max_length  
+LogKey.thread_id  
+LogKey.thread_id_max_length  
+LogKey.cpu_usage  
+LogKey.memory_usage  
+LogKey.log_type  
+LogKey.log_type_max_length  
+LogKey.file_info  
+LogKey.file_name  
+LogKey.file_name_length  
+LogKey.file_lineno  
+LogKey.file_lineno_length  
+LogKey.text  
+LogKey.trace_back  
+```
