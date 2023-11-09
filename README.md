@@ -8,6 +8,12 @@ def logger_function(log_dict):
     print(log_dict)
     # ...
 ```
+Initialize
+```python  
+import logqueue
+logqueue.initialize(logger_function)
+# ...
+```
 output:  
 {'log_type': 'exception',  
 'timestamp': 1700000000.100001,  
@@ -19,19 +25,13 @@ output:
 'file_lineno': 1,  
 'text': 'start',  
 'trace_back': 'error'} # if exception  
- 
-```python  
-import logqueue
-logqueue.initialize(logger_function)
-# ...
-```
 
 ## Close and Join
 ```python  
 logqueue.close()
 logqueue.join()
 ```
-Signal
+ex) Use signal.
 ```python  
 import signal
 import logqueue
@@ -54,9 +54,10 @@ logqueue.put_info("start")
 logqueue.info("start")
 ```  
 
-### **kwargs
+### Parameters
+use user variables
 ```python  
-logqueue.info("hi", alarm_meesage="alarm", input_database=True)
+logqueue.info("hi", alarm_message="alarm", input_database=True)
 ```  
 ```python 
 log_dict = logqueue.get()
@@ -70,17 +71,40 @@ output:
 'file_name': 'test.py',  
 'file_lineno': 1,  
 'text': 'hi',  
-'alarm_meesage': "alarm",  
-'input_database': True}  
+'alarm_meesage': "alarm", # user variable  
+'input_database': True} # user variable  
 
 ### Log types
+Base 'put()'  
 ```python  
 logqueue.put(log_type:str, *objs:object, **kwargs)
-logqueue.info(*objs:object, **kwargs) # or put_info() and == put(LogType.INFORMATION,)
-logqueue.debug(*objs:object, **kwargs) # or put_debug() and == put(LogType.DEBUG,)
-logqueue.warning(*objs:object, **kwargs) # or put_warning() and == put(LogType.WARNING,)
-logqueue.exception(*objs:object, **kwargs) # or put_exception() and == put(LogType.EXCEPTION,)
-logqueue.signal(*objs:object, **kwargs) # or put_signal() and == put(LogType.SIGNAL,)
+```
+```python  
+logqueue.info(*objs:object, **kwargs)
+logqueue.put_info(*objs:object, **kwargs)
+logqueue.put(LogType.INFORMATION, *objs:object, **kwargs)
+```
+```python  
+logqueue.debug(*objs:object, **kwargs)
+logqueue.put_debug(*objs:object, **kwargs)
+logqueue.put(LogType.DEBUG, *objs:object, **kwargs)
+```
+```python  
+logqueue.warning(*objs:object, **kwargs)
+logqueue.put_warning(*objs:object, **kwargs)
+logqueue.put(LogType.WARNING, *objs:object, **kwargs)
+```
+```python  
+logqueue.exception(*objs:object, **kwargs)
+logqueue.put_exception(*objs:object, **kwargs)
+logqueue.put(LogType.EXCEPTION, *objs:object, **kwargs)
+# 'trace_back' into log data. (logqueue.get())
+```
+```python  
+logqueue.signal(*objs:object, **kwargs)
+logqueue.put_signal(*objs:object, **kwargs)
+logqueue.put(LogType.SIGNAL, *objs:object, **kwargs)
+# line break when parse().
 ```
 
 ## Parse
@@ -95,15 +119,21 @@ output:
 ```python
 log_formatter = logqueue.get_log_formatter() # default log formatters
 # {date} {time} {process_id:0{process_id_max_length}d}:PID {thread_id:0{thread_id_max_length}d}:TID {file_name:>{file_name_length}}:{file_lineno:<{file_lineno_length}} {log_type:{log_type_max_length}} {text}
+```
+Clear
+```python  
 logqueue.clear_log_formatter()
-
+```
+Append Formatters
+```python  
 date_formatter = f"{{{logqueue.LogFormatterKey.date}}}"
 time_formatter = f"{{{logqueue.LogFormatterKey.time}}}"
 append_log_formatter(date_formatter)
 append_log_formatter(time_formatter)
 log_formatter = logqueue.get_log_formatter()
 # {date} {time}
-
+```
+```python  
 pid_formatter = logqueue.get_process_id_formatter()
 # == f"{{{logqueue.LogFormatterKey.process_id}:0{{{logqueue.LogFormatterKey.process_id_max_length}}}d}}:PID"
 file_name_formatter = f"{{{logqueue.LogFormatterKey.file_name}:>{{{logqueue.LogFormatterKey.file_name_length}}}}}"
@@ -111,22 +141,23 @@ text = logqueue.get_text_formatter()
 logqueue.append_log_formatters(pid_formatter, file_name_formatter, text)
 log_formatter = logqueue.get_log_formatter()
 # {date} {time} {process_id:0{process_id_max_length}d}:PID {file_name:>{file_name_length}} {text}
-
+```
+Replace Formatter
+```python  
 logqueue.replace_log_formatter(pid_formatter)
 log_formatter = logqueue.get_log_formatter()
 # {date} {time} {file_name:>{file_name_length}}
-
+```
+```python  
 logqueue.replace_log_formatter(time_formatter, pid_formatter)
 log_formatter = logqueue.get_log_formatter()
 # {date} {process_id:0{process_id_max_length}d}:PID {file_name:>{file_name_length}}
 ```
-
+Change each formatter
 ```python
 logqueue.set_date_formatter("%y-%m-%d")
 date_formatter = logqueue.get_date_formatter()
 # %y-%m-%d
-```
-```python
 logqueue.set_process_id_formatter(f"{{{logqueue.LogFormatterKey.process_id}:0{{{logqueue.LogFormatterKey.process_id_max_length}}}d}}:PID")
 process_id_formatter = logqueue.get_process_id_formatter()
 # {process_id:0{process_id_max_length}d}:PID

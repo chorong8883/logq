@@ -278,12 +278,20 @@ def get_file_name_max_length():
     return __file_name_max_length.value
 def set_file_name_max_length(length:int):
     __file_name_max_length.value = length
+def get_file_name_formatter():
+    return __file_name_formatter.value
+def set_file_name_formatter(formatter:str):
+    __file_name_formatter.value = formatter
     
 ####################################################################################################################
 def get_file_lineno_max_length():
     return __file_lineno_max_length.value
 def set_file_lineno_max_length(length:int):
     __file_lineno_max_length.value = length
+def get_file_lineno_formatter():
+    return __file_lineno_formatter.value
+def set_file_lineno_formatter(formatter:str):
+    __file_lineno_formatter.value = formatter
 
 ####################################################################################################################
 def get_thread_id_max_length():
@@ -409,9 +417,11 @@ def parse(log_dict:dict):
     log_formatter = get_log_formatter()
     
     result_dict = {}
-    if __is_parse_log_type.value:
+    if LogDictKey.log_type in log_dict and __is_parse_log_type.value:
         result_dict[LogFormatterKey.log_type] = cut_tail_str(log_dict[LogDictKey.log_type], __log_type_max_length.value)
         result_dict[LogFormatterKey.log_type_max_length] = __log_type_max_length.value
+    else:
+        log_formatter = replace_formatter(log_formatter, get_log_type_formatter())
     
     if LogDictKey.timestamp in log_dict and __is_parse_date.value:
         result_dict[LogFormatterKey.date] = datetime.fromtimestamp(log_dict[LogDictKey.timestamp]).strftime(__date_formatter.value)
@@ -423,24 +433,31 @@ def parse(log_dict:dict):
     else:
         log_formatter = replace_formatter(log_formatter, f"{{{LogFormatterKey.time}}}")
     
-    if __is_parse_process_id.value:
+    if LogDictKey.process_id in log_dict and __is_parse_process_id.value:
         result_dict[LogFormatterKey.process_id] = cut_front_int(log_dict[LogDictKey.process_id], __process_id_max_length.value)
         result_dict[LogFormatterKey.process_id_max_length] = __process_id_max_length.value
+    else:
+        log_formatter = replace_formatter(log_formatter, get_process_id_formatter())
     
-    if __is_parse_thread_id.value:
+    if LogDictKey.thread_id in log_dict and __is_parse_thread_id.value:
         result_dict[LogFormatterKey.thread_id] = cut_front_int(log_dict[LogDictKey.thread_id], __thread_id_max_length.value)
         result_dict[LogFormatterKey.thread_id_max_length] = __thread_id_max_length.value
+    else:
+        log_formatter = replace_formatter(log_formatter, get_thread_id_formatter())
     
-    if is_psutil:
-        if __is_parse_cpu_usage.value:
-            result_dict[LogFormatterKey.cpu_usage] = log_dict[LogDictKey.cpu_usage]
-            result_dict[LogFormatterKey.cpu_usage_max_length] = __cpu_usage_max_length.value
-    if is_psutil:
-        if __is_parse_memory_usage.value:
-            result_dict[LogFormatterKey.memory_usage] = log_dict[LogDictKey.memory_usage]
-            result_dict[LogFormatterKey.memory_usage_max_length] = __memory_usage_max_length.value
+    if is_psutil and LogDictKey.cpu_usage in log_dict and __is_parse_cpu_usage.value:
+        result_dict[LogFormatterKey.cpu_usage] = log_dict[LogDictKey.cpu_usage]
+        result_dict[LogFormatterKey.cpu_usage_max_length] = __cpu_usage_max_length.value
+    else:
+        log_formatter = replace_formatter(log_formatter, get_cpu_usage_formatter())
     
-    if __is_parse_file_name.value:
+    if is_psutil and LogDictKey.memory_usage in log_dict and __is_parse_memory_usage.value:
+        result_dict[LogFormatterKey.memory_usage] = log_dict[LogDictKey.memory_usage]
+        result_dict[LogFormatterKey.memory_usage_max_length] = __memory_usage_max_length.value
+    else:
+        log_formatter = replace_formatter(log_formatter, get_memory_usage_formatter())
+    
+    if LogDictKey.file_name in log_dict and __is_parse_file_name.value:
         file_name_len = len(log_dict[LogDictKey.file_name])
         if __file_name_length.value < file_name_len:
             if file_name_len < __file_name_max_length.value:
@@ -449,8 +466,11 @@ def parse(log_dict:dict):
                 __file_name_length.value = __file_name_max_length.value
         result_dict[LogFormatterKey.file_name] = log_dict[LogDictKey.file_name]
         result_dict[LogFormatterKey.file_name_length] = __file_name_length.value
+    else:
+        log_formatter = replace_formatter(log_formatter, get_file_name_formatter())
     
-    if __is_parse_file_lineno.value:
+    
+    if LogDictKey.file_lineno in log_dict and __is_parse_file_lineno.value:
         file_lineno_str_len = len(str(log_dict[LogDictKey.file_lineno]))
         if __file_lineno_length.value < file_lineno_str_len:
             if file_lineno_str_len < __file_lineno_max_length.value:
@@ -459,17 +479,23 @@ def parse(log_dict:dict):
                 __file_lineno_length.value = __file_lineno_max_length.value
         result_dict[LogFormatterKey.file_lineno] = log_dict[LogDictKey.file_lineno]
         result_dict[LogFormatterKey.file_lineno_length] = __file_lineno_length.value
+    else:
+        log_formatter = replace_formatter(log_formatter, get_file_lineno_formatter())
     
-    if __is_parse_text.value:
+    
+    if LogDictKey.text in log_dict and __is_parse_text.value:
         result_dict[LogFormatterKey.text] = log_dict[LogDictKey.text]
+    else:
+        log_formatter = replace_formatter(log_formatter, get_text_formatter())
     
-    if __is_parse_trace_back.value and log_dict[LogDictKey.log_type] == LogType.EXCEPTION:
+    if LogDictKey.log_type in log_dict and LogDictKey.trace_back in log_dict and\
+        log_dict[LogDictKey.log_type] == LogType.EXCEPTION and __is_parse_trace_back.value:
         log_formatter += f"\n{{{LogFormatterKey.trace_back}}}"
         result_dict[LogFormatterKey.trace_back] = log_dict[LogDictKey.trace_back]
-
+    
     log_str = log_formatter.format(**result_dict)
     
-    if __is_parse_signal_break_line.value and log_dict[LogDictKey.log_type] == LogType.SIGNAL:
+    if LogDictKey.log_type in log_dict and log_dict[LogDictKey.log_type] == LogType.SIGNAL and __is_parse_signal_break_line.value:
         log_str = f"\n{log_str}" 
     
     return log_str
