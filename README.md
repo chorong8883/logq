@@ -54,7 +54,7 @@ logqueue.put_info("start")
 logqueue.info("start")
 ```  
 
-#### **kwargs
+### **kwargs
 ```python  
 logqueue.info("hi", alarm_meesage="alarm", input_database=True)
 ```  
@@ -73,13 +73,14 @@ output:
 'alarm_meesage': "alarm",  
 'input_database': True}  
 
-#### Log function types
+### Log types
 ```python  
 logqueue.put(log_type:str, *objs:object, **kwargs)
-logqueue.info(*objs:object, **kwargs) # or put_info()
-logqueue.debug(*objs:object, **kwargs) # or put_debug()
-logqueue.exception(*objs:object, **kwargs) # or put_exception()
-logqueue.signal(*objs:object, **kwargs) # or put_signal()
+logqueue.info(*objs:object, **kwargs) # or put_info() and == put(LogType.INFORMATION,)
+logqueue.debug(*objs:object, **kwargs) # or put_debug() and == put(LogType.DEBUG,)
+logqueue.warning(*objs:object, **kwargs) # or put_warning() and == put(LogType.WARNING,)
+logqueue.exception(*objs:object, **kwargs) # or put_exception() and == put(LogType.EXCEPTION,)
+logqueue.signal(*objs:object, **kwargs) # or put_signal() and == put(LogType.SIGNAL,)
 ```
 
 ## Parse
@@ -90,45 +91,81 @@ print(log_str)
 output:  
 2023-11-15 07:13:20.100001 12%:CPU 12%:Mem 234:PID 4567890:TID info test.py:1 start  
 
+### Parse Formatter
 ```python
-get_log_formatters() # default log formatters
+log_formatter = logqueue.get_log_formatter() # default log formatters
 # {date} {time} {process_id:0{process_id_max_length}d}:PID {thread_id:0{thread_id_max_length}d}:TID {file_name:>{file_name_length}}:{file_lineno:<{file_lineno_length}} {log_type:{log_type_max_length}} {text}
-clear_log_formatter()
+logqueue.clear_log_formatter()
 
-append_log_formatter(f"{{{LogKey.date}}}")
-append_log_formatter(f"{{{LogKey.time}}}")
-get_log_formatters()
+date_formatter = f"{{{logqueue.LogFormatterKey.date}}}"
+time_formatter = f"{{{logqueue.LogFormatterKey.time}}}"
+append_log_formatter(date_formatter)
+append_log_formatter(time_formatter)
+log_formatter = logqueue.get_log_formatter()
 # {date} {time}
+
+pid_formatter = logqueue.get_process_id_formatter()
+# == f"{{{logqueue.LogFormatterKey.process_id}:0{{{logqueue.LogFormatterKey.process_id_max_length}}}d}}:PID"
+file_name_formatter = f"{{{logqueue.LogFormatterKey.file_name}:>{{{logqueue.LogFormatterKey.file_name_length}}}}}"
+text = logqueue.get_text_formatter()
+logqueue.append_log_formatters(pid_formatter, file_name_formatter, text)
+log_formatter = logqueue.get_log_formatter()
+# {date} {time} {process_id:0{process_id_max_length}d}:PID {file_name:>{file_name_length}} {text}
+
+logqueue.replace_log_formatter(pid_formatter)
+log_formatter = logqueue.get_log_formatter()
+# {date} {time} {file_name:>{file_name_length}}
+
+logqueue.replace_log_formatter(time_formatter, pid_formatter)
+log_formatter = logqueue.get_log_formatter()
+# {date} {process_id:0{process_id_max_length}d}:PID {file_name:>{file_name_length}}
 ```
+
 ```python
-set_date_formatter("%y-%m-%d")
-get_date_formatter()
+logqueue.set_date_formatter("%y-%m-%d")
+date_formatter = logqueue.get_date_formatter()
 # %y-%m-%d
 ```
 ```python
-set_process_id_formatter(f"{{{LogKey.process_id}:0{{{LogKey.process_id_max_length}}}d}}:PID")
-get_process_id_formatter()
+logqueue.set_process_id_formatter(f"{{{logqueue.LogFormatterKey.process_id}:0{{{logqueue.LogFormatterKey.process_id_max_length}}}d}}:PID")
+process_id_formatter = logqueue.get_process_id_formatter()
 # {process_id:0{process_id_max_length}d}:PID
 ```
 
-### LogKeys
+## Keys
 ```python
-LogKey.date  
-LogKey.time  
-LogKey.timestamp  
-LogKey.process_id  
-LogKey.process_id_max_length  
-LogKey.thread_id  
-LogKey.thread_id_max_length  
-LogKey.cpu_usage  
-LogKey.memory_usage  
-LogKey.log_type  
-LogKey.log_type_max_length  
-LogKey.file_info  
-LogKey.file_name  
-LogKey.file_name_length  
-LogKey.file_lineno  
-LogKey.file_lineno_length  
-LogKey.text  
-LogKey.trace_back  
+class LogDictKey:
+    log_type
+    timestamp
+    process_id
+    thread_id
+    cpu_usage
+    memory_usage
+    file_name
+    file_lineno
+    text
+    trace_back
+```
+```python
+class LogFormatterKey:
+    date
+    time
+    timestamp
+    process_id
+    process_id_max_length
+    thread_id
+    thread_id_max_length
+    cpu_usage
+    cpu_usage_max_length
+    memory_usage
+    memory_usage_max_length
+    log_type
+    log_type_max_length
+    file_info
+    file_name
+    file_name_length
+    file_lineno
+    file_lineno_length
+    text
+    trace_back
 ```
