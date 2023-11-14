@@ -75,35 +75,40 @@ output:
 'input_database': True} # user variable  
 
 ### Log types
-Base 'put()'  
+Base function is 'logqueue.put()'  
 ```python  
+import logqueue
 logqueue.put(log_type:str, *objs:object, **kwargs)
 ```
+
+'LogType' is string variable.(not enum)
 ```python  
+import logqueue
+from logqueue import LogType
 logqueue.info(*objs:object, **kwargs)
 logqueue.put_info(*objs:object, **kwargs)
-logqueue.put(LogType.INFORMATION, *objs:object, **kwargs)
+logqueue.put(log_type=LogType.INFORMATION, *objs:object, **kwargs)
 ```
 ```python  
 logqueue.debug(*objs:object, **kwargs)
 logqueue.put_debug(*objs:object, **kwargs)
-logqueue.put(LogType.DEBUG, *objs:object, **kwargs)
+logqueue.put(log_type=LogType.DEBUG, *objs:object, **kwargs)
 ```
 ```python  
 logqueue.warning(*objs:object, **kwargs)
 logqueue.put_warning(*objs:object, **kwargs)
-logqueue.put(LogType.WARNING, *objs:object, **kwargs)
+logqueue.put(log_type=LogType.WARNING, *objs:object, **kwargs)
 ```
 ```python  
 logqueue.exception(*objs:object, **kwargs)
 logqueue.put_exception(*objs:object, **kwargs)
-logqueue.put(LogType.EXCEPTION, *objs:object, **kwargs)
+logqueue.put(log_type=LogType.EXCEPTION, *objs:object, **kwargs)
 # 'trace_back' into log data. (logqueue.get())
 ```
 ```python  
 logqueue.signal(*objs:object, **kwargs)
 logqueue.put_signal(*objs:object, **kwargs)
-logqueue.put(LogType.SIGNAL, *objs:object, **kwargs)
+logqueue.put(log_type=LogType.SIGNAL, *objs:object, **kwargs)
 # line break when parse().
 ```
 
@@ -128,8 +133,8 @@ Append Formatters
 ```python  
 date_formatter = f"{{{logqueue.LogFormatterKey.date}}}"
 time_formatter = f"{{{logqueue.LogFormatterKey.time}}}"
-append_log_formatter(date_formatter)
-append_log_formatter(time_formatter)
+logqueue.append_log_formatter(date_formatter)
+logqueue.append_log_formatter(time_formatter)
 log_formatter = logqueue.get_log_formatter()
 # {date} {time}
 ```
